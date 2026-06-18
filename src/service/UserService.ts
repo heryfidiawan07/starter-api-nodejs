@@ -37,7 +37,7 @@ export class UserService implements IUserUsecase {
       email: dto.email,
       password: hashed,
       role_id: dto.role_id ?? null,
-      status: dto.status ?? true,
+      is_active: dto.is_active ?? true,
     });
   }
 
@@ -48,7 +48,7 @@ export class UserService implements IUserUsecase {
     const data: Partial<User> = {};
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.role_id !== undefined) data.role_id = dto.role_id ?? null;
-    if (dto.status !== undefined) data.status = dto.status;
+    if (dto.is_active !== undefined) data.is_active = dto.is_active;
 
     return this.userRepo.update(id, data);
   }

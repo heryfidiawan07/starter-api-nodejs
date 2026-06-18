@@ -12,7 +12,7 @@ export class UserRepository implements IUserRepository {
 
     const buildWhere = () => {
       const base: Record<string, unknown> = {};
-      if (filter.status !== undefined) base.status = filter.status;
+      if (filter.is_active !== undefined) base.is_active = filter.is_active;
       if (filter.roleId) base.role_id = filter.roleId;
       return base;
     };

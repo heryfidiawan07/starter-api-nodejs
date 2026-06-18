@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { Config } from '../config/config';
 import { AuthHandler } from '../handler/AuthHandler';
+import { LookupHandler } from '../handler/LookupHandler';
 import { PermissionHandler } from '../handler/PermissionHandler';
 import { RoleHandler } from '../handler/RoleHandler';
 import { UserHandler } from '../handler/UserHandler';
@@ -20,6 +21,7 @@ export function setupRouter(
   userHandler: UserHandler,
   roleHandler: RoleHandler,
   permHandler: PermissionHandler,
+  lookupHandler: LookupHandler,
 ): void {
   app.use('/storage/photos', express.static(path.resolve(cfg.storage.path)));
 
@@ -81,4 +83,11 @@ export function setupRouter(
   permissions.get('/', permHandler.index);
   permissions.get('/tree', permHandler.tree);
   permissions.get('/role/:role_id', permHandler.byRole);
+
+  // Lookup
+  const lookup = Router();
+  lookup.use(authMiddleware);
+  api.use('/lookup', lookup);
+  lookup.get('/roles', lookupHandler.roles);
+  lookup.get('/permissions', lookupHandler.permissions);
 }

@@ -2,7 +2,7 @@ import { User } from '../entity/User';
 
 export interface UserFilter {
   search?: string;
-  status?: boolean;
+  is_active?: boolean;
   roleId?: string;
   page: number;
   perPage: number;

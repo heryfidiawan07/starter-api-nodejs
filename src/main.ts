@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import express from 'express';
-import cors from 'cors';
 import { config } from './config/config';
 import { createDataSource } from './database/datasource';
 import { seed } from './database/seeder';
@@ -19,6 +18,7 @@ import { AuthHandler } from './handler/AuthHandler';
 import { UserHandler } from './handler/UserHandler';
 import { RoleHandler } from './handler/RoleHandler';
 import { PermissionHandler } from './handler/PermissionHandler';
+import { LookupHandler } from './handler/LookupHandler';
 import { setupRouter } from './router/router';
 
 async function main(): Promise<void> {
@@ -50,16 +50,26 @@ async function main(): Promise<void> {
   const userHandler = new UserHandler(userSvc);
   const roleHandler = new RoleHandler(roleSvc);
   const permHandler = new PermissionHandler(permSvc);
+  const lookupHandler = new LookupHandler(roleRepo, permRepo);
 
   // Express app
   const app = express();
-  app.use(cors());
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Max-Age', '86400');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
   app.get('/', (_req, res) => res.json({ message: 'Starter API — Node.js' }));
 
-  setupRouter(app, config, userRepo, authHandler, userHandler, roleHandler, permHandler);
+  setupRouter(app, config, userRepo, authHandler, userHandler, roleHandler, permHandler, lookupHandler);
 
   const port = parseInt(config.app.port, 10);
   app.listen(port, () => {

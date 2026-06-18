@@ -61,6 +61,13 @@ async function seedPermissions(ds: DataSource): Promise<void> {
     repo.create({ id: uuidv4(), parent_id: roleMenu.id, name: 'role:delete', label: 'Delete Role', type: 'action', order: 3 }),
   ];
   await repo.save(roleActions);
+
+  const permissionMenu = repo.create({
+    id: uuidv4(), parent_id: adminMenu.id,
+    name: 'permission:index', label: 'Permission', type: 'menu',
+    route: '/admin/permissions', icon: 'lock', order: 3,
+  });
+  await repo.save(permissionMenu);
 }
 
 async function seedRootUser(ds: DataSource): Promise<void> {
@@ -75,7 +82,7 @@ async function seedRootUser(ds: DataSource): Promise<void> {
     email: 'root@example.com',
     password: hashed,
     is_root: true,
-    status: true,
+    is_active: true,
     verified_at: new Date(),
   });
   await repo.save(root);

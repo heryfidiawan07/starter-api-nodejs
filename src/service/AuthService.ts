@@ -45,7 +45,7 @@ export class AuthService implements IAuthUsecase {
       name: dto.name,
       email: dto.email,
       password: hashed,
-      status: true,
+      is_active: true,
     });
 
     if (this.cfg.emailVerificationRequired) {
@@ -61,7 +61,7 @@ export class AuthService implements IAuthUsecase {
   async login(dto: LoginDto): Promise<AuthResponse> {
     const user = await this.userRepo.findByEmail(dto.email);
     if (!user) throw ERR_INVALID_CREDENTIALS;
-    if (!user.status) throw ERR_ACCOUNT_INACTIVE;
+    if (!user.is_active) throw ERR_ACCOUNT_INACTIVE;
     if (!user.password || !(await hashPkg.check(dto.password, user.password))) throw ERR_INVALID_CREDENTIALS;
     if (this.cfg.emailVerificationRequired && !user.verified_at) throw ERR_EMAIL_NOT_VERIFIED;
 
@@ -182,7 +182,7 @@ export class AuthService implements IAuthUsecase {
           username,
           name,
           email,
-          status: true,
+          is_active: true,
           verified_at: new Date(),
         });
       }
@@ -192,7 +192,7 @@ export class AuthService implements IAuthUsecase {
       if (!user) throw ERR_USER_NOT_FOUND;
     }
 
-    if (!user.status) throw ERR_ACCOUNT_INACTIVE;
+    if (!user.is_active) throw ERR_ACCOUNT_INACTIVE;
     return this.generateTokenPair(user);
   }
 

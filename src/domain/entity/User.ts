@@ -38,7 +38,7 @@ export class User {
   role: Role | null;
 
   @Column({ default: true })
-  status: boolean;
+  is_active: boolean;
 
   @CreateDateColumn()
   created_at: Date;

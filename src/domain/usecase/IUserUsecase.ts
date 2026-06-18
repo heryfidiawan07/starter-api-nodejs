@@ -8,13 +8,13 @@ export const CreateUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   role_id: z.string().uuid().optional().nullable(),
-  status: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 export const UpdateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   role_id: z.string().uuid().optional().nullable(),
-  status: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 export const UpdateProfileSchema = z.object({
