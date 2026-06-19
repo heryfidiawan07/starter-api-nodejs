@@ -16,14 +16,22 @@ export class UserService implements IUserUsecase {
     private cfg: Config,
   ) {}
 
+  private withPhotoUrl(user: User): User {
+    if (user.photo && !user.photo.startsWith('http')) {
+      user.photo = uploadPkg.buildPhotoUrl(this.cfg.storage.url, user.photo);
+    }
+    return user;
+  }
+
   async findAll(filter: UserFilter): Promise<[User[], number]> {
-    return this.userRepo.findAll(filter);
+    const [users, total] = await this.userRepo.findAll(filter);
+    return [users.map(u => this.withPhotoUrl(u)), total];
   }
 
   async findById(id: string): Promise<User> {
     const user = await this.userRepo.findById(id);
     if (!user) throw ERR_USER_NOT_FOUND;
-    return user;
+    return this.withPhotoUrl(user);
   }
 
   async create(dto: CreateUserDto): Promise<User> {
@@ -31,7 +39,7 @@ export class UserService implements IUserUsecase {
     if (await this.userRepo.findByUsername(dto.username)) throw ERR_USER_USERNAME_TAKEN;
 
     const hashed = await hashPkg.make(dto.password);
-    return this.userRepo.create({
+    const user = await this.userRepo.create({
       username: dto.username,
       name: dto.name,
       email: dto.email,
@@ -39,6 +47,7 @@ export class UserService implements IUserUsecase {
       role_id: dto.role_id ?? null,
       is_active: dto.is_active ?? true,
     });
+    return this.withPhotoUrl(user);
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<User> {
@@ -50,7 +59,8 @@ export class UserService implements IUserUsecase {
     if (dto.role_id !== undefined) data.role_id = dto.role_id ?? null;
     if (dto.is_active !== undefined) data.is_active = dto.is_active;
 
-    return this.userRepo.update(id, data);
+    const updated = await this.userRepo.update(id, data);
+    return this.withPhotoUrl(updated);
   }
 
   async delete(id: string): Promise<void> {
@@ -70,7 +80,8 @@ export class UserService implements IUserUsecase {
       data.username = dto.username;
     }
 
-    return this.userRepo.update(userId, data);
+    const updated = await this.userRepo.update(userId, data);
+    return this.withPhotoUrl(updated);
   }
 
   async updatePhoto(userId: string, buffer: Buffer, mimetype: string, originalname: string): Promise<User> {
@@ -83,8 +94,6 @@ export class UserService implements IUserUsecase {
 
     const filename = uploadPkg.savePhoto(buffer, mimetype, originalname, this.cfg.storage.path);
     const updated = await this.userRepo.update(userId, { photo: filename });
-    const photoUrl = uploadPkg.buildPhotoUrl(this.cfg.storage.url, filename);
-    updated.photo = photoUrl;
-    return updated;
+    return this.withPhotoUrl(updated);
   }
 }

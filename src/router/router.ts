@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { Config } from '../config/config';
@@ -10,6 +10,7 @@ import { UserHandler } from '../handler/UserHandler';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/permission';
 import { IUserRepository } from '../domain/repository/IUserRepository';
+import * as res from '../pkg/response/response';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -28,6 +29,14 @@ export function setupRouter(
   const api = Router();
   app.use('/api/v1', api);
 
+  // Public config
+  api.get('/config', (_req: Request, resp: Response) => {
+    res.ok(resp, 'Config retrieved', {
+      google_client_id: cfg.google.clientId,
+      facebook_app_id: cfg.facebook.clientId,
+    });
+  });
+
   // Public auth
   const auth = Router();
   api.use('/auth', auth);
@@ -37,8 +46,8 @@ export function setupRouter(
   auth.post('/forgot-password', authHandler.forgotPassword);
   auth.post('/reset-password', authHandler.resetPassword);
   auth.get('/verify-email', authHandler.verifyEmail);
-  auth.post('/google', authHandler.googleAuth);
-  auth.post('/facebook', authHandler.facebookAuth);
+  auth.post('/oauth/google', authHandler.googleAuth);
+  auth.post('/oauth/facebook', authHandler.facebookAuth);
 
   // Protected auth
   const authProtected = Router();

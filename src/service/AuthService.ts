@@ -13,6 +13,7 @@ import {
 import { Mailer } from '../pkg/email/email';
 import * as hashPkg from '../pkg/hash/hash';
 import * as jwtPkg from '../pkg/jwt/jwt';
+import * as uploadPkg from '../pkg/upload/upload';
 
 export class AuthError extends Error {}
 export const ERR_INVALID_CREDENTIALS = new AuthError('invalid email or password');
@@ -35,6 +36,13 @@ export class AuthService implements IAuthUsecase {
     private cfg: Config,
   ) {}
 
+  private withPhotoUrl(user: User): User {
+    if (user.photo && !user.photo.startsWith('http')) {
+      user.photo = uploadPkg.buildPhotoUrl(this.cfg.storage.url, user.photo);
+    }
+    return user;
+  }
+
   async register(dto: RegisterDto): Promise<User> {
     if (await this.userRepo.findByEmail(dto.email)) throw ERR_EMAIL_TAKEN;
     if (await this.userRepo.findByUsername(dto.username)) throw ERR_USERNAME_TAKEN;
@@ -55,7 +63,7 @@ export class AuthService implements IAuthUsecase {
       user.verified_at = new Date();
     }
 
-    return user;
+    return this.withPhotoUrl(user);
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -140,7 +148,7 @@ export class AuthService implements IAuthUsecase {
   async getMe(userId: string): Promise<User> {
     const user = await this.userRepo.findById(userId);
     if (!user) throw ERR_USER_NOT_FOUND;
-    return user;
+    return this.withPhotoUrl(user);
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
@@ -155,6 +163,7 @@ export class AuthService implements IAuthUsecase {
   }
 
   private async generateTokenPair(user: User): Promise<AuthResponse> {
+    this.withPhotoUrl(user);
     const accessToken = jwtPkg.generateAccessToken(user.id, user.is_root, this.cfg.jwt.secret, this.cfg.jwt.accessExpire);
     const refreshTokenStr = jwtPkg.generateRefreshToken(user.id, this.cfg.jwt.secret, this.cfg.jwt.refreshExpire);
 
